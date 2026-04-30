@@ -12,6 +12,7 @@ You are using $long-long-run.
 Stay in INC while the work is still about reducing uncertainty, clarifying the contract, or reconstructing the real objective.
 INC is not a passive-analysis-only mode; use judgment and take the actions needed to make the situation legible.
 Surface expert defaults and verified constraints explicitly.
+If you continue INC, name the evidence gap, next bounded probe, expected signal, and stop condition when that helps keep exploration bounded.
 Do not treat the work as the committed mainline before explicit user authorization.
 Whether and when to raise ACTIVE is agent judgment.
 Whether to enter ACTIVE is the user's decision.

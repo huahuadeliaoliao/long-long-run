@@ -732,6 +732,7 @@ class LongLongRunRuntime:
                     "This session is in long-long-run INC mode (Intent Noise Cancellation). "
                     + context,
                     "First address the user's latest message. Then continue using judgment to reduce uncertainty, clarify the contract, and make the work more legible. "
+                    + "If continuing INC exploration, name the evidence gap, next bounded probe, expected signal, and stop condition when that helps keep exploration bounded. "
                     + "INC is not limited to passive analysis, but it does not grant implicit authorization to treat the work as the committed mainline. "
                     + "Surface expert defaults and verified constraints clearly so the user can adjust them. "
                     + "Whether and when to raise a transition to ACTIVE is a matter of agent judgment; entering ACTIVE still requires explicit user authorization.",

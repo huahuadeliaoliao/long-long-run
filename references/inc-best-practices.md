@@ -118,6 +118,17 @@ Do not keep exploring just because more information could be gathered.
 
 The agent should explain its judgment: what is known, what remains uncertain, why the next move is exploration, synthesis, a targeted question, or an ACTIVE proposal.
 
+When the next move is continued INC exploration, avoid saying only that more exploration is needed.
+
+A useful continued-INC recommendation should make the next evidence-strengthening move visible. When the decision is non-obvious or the exploration could expand, include:
+
+- evidence_gap: which part of the evidence chain is weak or missing
+- next_probe: the concrete file, command, source, experiment, comparison, or user decision to inspect next
+- expected_signal: what result would strengthen, weaken, or close the hypothesis
+- stop_condition: when to stop this INC pass and re-evaluate whether to synthesize, ask a targeted question, or raise ACTIVE
+
+For tiny or obvious next steps, keep this lightweight. Continued INC should be bounded by judgment, not by a rigid template. Do not continue exploration as a general posture; continue it as a specific evidence-strengthening move.
+
 ## Raise ACTIVE Only When It Means Commitment
 
 Readiness is not authorization.
