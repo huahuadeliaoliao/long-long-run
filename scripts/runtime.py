@@ -120,6 +120,18 @@ def render_brief_context(state: dict[str, Any]) -> str:
     return " | ".join(parts)
 
 
+def _append_sentence(prefix: str, sentence: str) -> str:
+    prefix = clean_string(prefix)
+    sentence = clean_string(sentence)
+    if not prefix:
+        return sentence
+    if not sentence:
+        return prefix
+    if prefix.endswith((".", "!", "?")):
+        return prefix + " " + sentence
+    return prefix + ". " + sentence
+
+
 def build_readiness(state: dict[str, Any]) -> dict[str, Any]:
     missing: list[str] = []
     warnings: list[str] = []
@@ -233,16 +245,15 @@ def stop_repair_message(path: Path, error: str) -> str:
 def build_stop_prompt(path: Path, state: dict[str, Any], had_assistant_text: bool) -> str:
     context = render_brief_context(state)
     if had_assistant_text:
-        prompt = (
-            "Stop checkpoint. This session is in long-long-run ACTIVE mode. "
-            + context
-            + ". Do not stop because of the checkpoint. Continue with the next action now unless blocked by user input, permissions, or unavailable external resources."
+        prompt = _append_sentence(
+            "Stop checkpoint. This session is in long-long-run ACTIVE mode. " + context,
+            "Do not stop because of the checkpoint. Continue with the next action now unless blocked by user input, permissions, or unavailable external resources.",
         )
     else:
-        prompt = (
+        prompt = _append_sentence(
             "Stop checkpoint. This session is in long-long-run ACTIVE mode, and your latest completion attempt produced no user-visible assistant text. "
-            + context
-            + ". Continue with the next action now unless the objective is truly complete or genuinely blocked."
+            + context,
+            "Continue with the next action now unless the objective is truly complete or genuinely blocked.",
         )
     prompt += (
         " If the objective is truly complete, the user explicitly asked to stop, or the work is genuinely blocked, "
@@ -704,27 +715,26 @@ class LongLongRunRuntime:
         action = "noop"
         if mode == "active":
             action = "inject_context"
-            message = (
-                "This session has an active long-long-run objective. "
-                + context
-                + ". First address the user's latest message. Then resume the active mainline automatically."
+            message = _append_sentence(
+                "This session has an active long-long-run objective. " + context,
+                "First address the user's latest message. Then resume the active mainline automatically.",
             )
         elif mode == "inc":
             action = "inject_context"
             if authorized:
-                message = (
+                message = _append_sentence(
                     "This session is in long-long-run INC mode, and the user has already authorized ACTIVE. "
-                    + context
-                    + ". First address the user's latest message. Then activate when you judge that the work should now be carried as the authorized mainline."
+                    + context,
+                    "First address the user's latest message. Then activate when you judge that the work should now be carried as the authorized mainline.",
                 )
             else:
-                message = (
+                message = _append_sentence(
                     "This session is in long-long-run INC mode (Intent Noise Cancellation). "
-                    + context
-                    + ". First address the user's latest message. Then continue using judgment to reduce uncertainty, clarify the contract, and make the work more legible. "
+                    + context,
+                    "First address the user's latest message. Then continue using judgment to reduce uncertainty, clarify the contract, and make the work more legible. "
                     + "INC is not limited to passive analysis, but it does not grant implicit authorization to treat the work as the committed mainline. "
                     + "Surface expert defaults and verified constraints clearly so the user can adjust them. "
-                    + "Whether and when to raise a transition to ACTIVE is a matter of agent judgment; entering ACTIVE still requires explicit user authorization."
+                    + "Whether and when to raise a transition to ACTIVE is a matter of agent judgment; entering ACTIVE still requires explicit user authorization.",
                 )
 
         return {

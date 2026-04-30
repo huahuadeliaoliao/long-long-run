@@ -134,12 +134,14 @@ def main() -> int:
     check("ready inc context still stays in inc", "continue using judgment to reduce uncertainty" in ctx1["message"])
     check("ready inc context does not force raising active", "ask whether the user wants to enter ACTIVE" not in ctx1["message"])
     check("ready inc context says active entry still needs authorization", "entering ACTIVE still requires explicit user authorization" in ctx1["message"])
+    check("ready inc context avoids duplicate punctuation", ".. First address" not in ctx1["message"])
 
     auth = rt.authorize_active(evidence="User said: start implementation now.", scope="single")
     check("authorize_active records authorized status", auth["authorized"] is True)
 
     ctx2 = rt.context_for_user_prompt()
     check("authorized inc context defers activation timing to agent judgment", "activate when you judge" in ctx2["message"])
+    check("authorized inc context avoids duplicate punctuation", ".. First address" not in ctx2["message"])
 
     active = rt.activate()
     check("activate succeeds after authorization", active["activated"] is True)
@@ -147,6 +149,7 @@ def main() -> int:
 
     stop = rt.stop_decision(last_assistant_message="Need to stop now")
     check("active stop guard blocks stopping", stop["decision"] == "block")
+    check("active stop guard avoids duplicate punctuation", ".. Do not stop" not in stop["reason"])
 
     returned = rt.return_to_inc(
         reason="Need to revisit acceptance criteria.",
