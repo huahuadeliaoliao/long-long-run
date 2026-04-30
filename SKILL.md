@@ -240,6 +240,7 @@ python3 "$LLR_PY/test_runtime.py"
 Read only what you need:
 
 - hook behavior: [references/hooks.md](references/hooks.md)
+- INC exploration practice: [references/inc-best-practices.md](references/inc-best-practices.md)
 - runtime architecture: [references/architecture.md](references/architecture.md)
 - optional prompt reminders: [references/prompt-templates.md](references/prompt-templates.md)
 - worked examples: [references/examples.md](references/examples.md)
