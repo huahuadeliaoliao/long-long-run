@@ -1,0 +1,8 @@
+interface:
+  display_name: "Long Long Run"
+  short_description: "Code-first harness for INC and authorized active runs"
+  brand_color: "#0F766E"
+  default_prompt: "Use $long-long-run when this task needs a persistent session-bound harness for exploration, recovery, or long execution. Stay in INC while reducing uncertainty and clarifying the contract, treat INC as a judgment-based working mode rather than passive analysis only, surface expert defaults and verified constraints clearly, let agent judgment decide whether and when to raise ACTIVE, and enter ACTIVE only after explicit user authorization."
+
+policy:
+  allow_implicit_invocation: true
