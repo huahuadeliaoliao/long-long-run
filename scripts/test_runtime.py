@@ -89,9 +89,10 @@ def main() -> int:
 
     ctx0 = rt.context_for_user_prompt()
     check("inc not-ready context injects", ctx0["action"] == "inject_context")
-    check("inc not-ready context allows judgment-based work", "continue using judgment to reduce uncertainty" in ctx0["message"])
-    check("inc not-ready context is not passive-analysis only", "INC is not limited to passive analysis" in ctx0["message"])
-    check("inc not-ready context keeps active timing as agent judgment", "Whether and when to raise a transition to ACTIVE is a matter of agent judgment" in ctx0["message"])
+    check("inc context builds evidence chain", "building and revising the evidence chain" in ctx0["message"])
+    check("inc context supports standalone exploration", "standalone exploration mode" in ctx0["message"])
+    check("inc context allows bounded changes", "make bounded changes" in ctx0["message"])
+    check("inc context keeps evidence fresh", "remove or replace evidence that has been overturned" in ctx0["message"])
 
     rt.update_contract(
         {
@@ -106,6 +107,13 @@ def main() -> int:
     rt.update_thinking(
         {
             "inferred_intent": "Stay in INC while reconstructing the project from evidence.",
+            "evidence_chain": [
+                {
+                    "claim": "The project needs an evidence-backed takeover before implementation.",
+                    "basis": "The user asked for a reliable takeover path and explicit approval before active work.",
+                    "implication": "Continue INC until the implementation path and authorization boundary are legible.",
+                }
+            ],
             "expert_defaults": ["Review repo structure, entrypoints, and runbooks before proposing changes."],
             "verified_constraints": ["Deployment behavior must match the documented environment."],
             "open_decisions": [],
@@ -116,11 +124,14 @@ def main() -> int:
         next_action="Read the backend entrypoints.",
     )
     check("checkpoint action returns checkpoint", checkpoint_result["action"] == "checkpoint")
+    rt.update({"progress": {"completion_signal": "Project map and agreed implementation path are captured."}})
 
     show = rt.show()
     state = show["state"]
     check("checkpoint persisted latest summary", state["progress"]["latest_checkpoint"] == "Completed initial project scan.")
     check("checkpoint persisted history entry", len(state["progress"]["checkpoint_history"]) == 1)
+    check("state keeps evidence chain", state["thinking"]["evidence_chain"][0]["claim"] == "The project needs an evidence-backed takeover before implementation.")
+    check("state keeps completion signal", state["progress"]["completion_signal"] == "Project map and agreed implementation path are captured.")
     check("state keeps verified constraints", state["thinking"]["verified_constraints"] == ["Deployment behavior must match the documented environment."])
     check("state keeps why_now", state["contract"]["why_now"] == "The user needs a reliable takeover path.")
     check("state keeps guardrails", state["contract"]["guardrails"] == ["Do not begin implementation before authorization."])
@@ -131,9 +142,9 @@ def main() -> int:
     check("activate blocked flags authorization", blocked_activate["needs_authorization"] is True)
 
     ctx1 = rt.context_for_user_prompt()
-    check("ready inc context still stays in inc", "continue using judgment to reduce uncertainty" in ctx1["message"])
+    check("ready inc context still stays in inc", "building and revising the evidence chain" in ctx1["message"])
     check("ready inc context does not force raising active", "ask whether the user wants to enter ACTIVE" not in ctx1["message"])
-    check("ready inc context says active entry still needs authorization", "entering ACTIVE still requires explicit user authorization" in ctx1["message"])
+    check("ready inc context says active entry still needs authorization", "Entering ACTIVE still requires explicit user authorization" in ctx1["message"])
     check("ready inc context avoids duplicate punctuation", ".. First address" not in ctx1["message"])
 
     auth = rt.authorize_active(evidence="User said: start implementation now.", scope="single")
@@ -146,10 +157,12 @@ def main() -> int:
     active = rt.activate()
     check("activate succeeds after authorization", active["activated"] is True)
     check("mode switches to active", active["mode"] == "active")
+    check("activate keeps closure open", rt.show()["state"]["progress"]["closure"]["state"] == "open")
 
     stop = rt.stop_decision(last_assistant_message="Need to stop now")
     check("active stop guard blocks stopping", stop["decision"] == "block")
-    check("active stop guard avoids duplicate punctuation", ".. Do not stop" not in stop["reason"])
+    check("active stop guard prevents premature stopping", "actually ready to stop" in stop["reason"])
+    check("active stop guard includes completion signal", "completion signal" in stop["reason"])
 
     returned = rt.return_to_inc(
         reason="Need to revisit acceptance criteria.",
@@ -159,13 +172,15 @@ def main() -> int:
     show_back = rt.show()["state"]
     check("return_to_inc clears authorization", show_back["activation"]["status"] == "idle")
     check("return_to_inc updates next_action", show_back["progress"]["next_action"] == "Clarify scope drift with the user.")
+    check("return_to_inc reopens closure", show_back["progress"]["closure"]["state"] == "open")
 
     ctx3 = rt.context_for_user_prompt()
     check("after return to inc, context no longer says authorized", "already authorized ACTIVE" not in ctx3["message"])
 
     closed = rt.close(reason="user_paused", summary="Paused after scope review.")
     check("close disables runtime", closed["mode"] == "disabled")
-    check("close stores close_reason", rt.show()["state"]["runtime"]["close_reason"] == "user_paused")
+    check("close stores closure reason", rt.show()["state"]["progress"]["closure"]["reason"] == "user_paused")
+    check("close stores closure state", rt.show()["state"]["progress"]["closure"]["state"] == "closed")
     check("close appends summary history", len(rt.show()["state"]["progress"]["checkpoint_history"]) >= 3)
     check("disabled stop allows stopping", rt.stop_decision()["decision"] == "allow")
 
@@ -183,9 +198,19 @@ def main() -> int:
             "thinking": {
                 "expert_defaults": ["Preserve existing defaults across partial updates."],
                 "verified_constraints": ["Constraint A"],
+                "evidence_chain": [
+                    {
+                        "claim": "Constraint A is active.",
+                        "basis": "The update captured it as a verified constraint.",
+                        "implication": "Keep future steps compatible with Constraint A.",
+                    },
+                    {"claim": "", "basis": "", "implication": ""},
+                    "ignored evidence",
+                ],
             },
             "progress": {
                 "next_action": "Do step one",
+                "completion_signal": "Step one is done and checked.",
             },
         }
     )
@@ -206,6 +231,8 @@ def main() -> int:
     check("partial contract update preserves why_now", show2["contract"]["why_now"] == "Keep the intent intact")
     check("partial contract update preserves guardrails", show2["contract"]["guardrails"] == ["Do not regress the contract."])
     check("partial thinking update preserves verified constraints", show2["thinking"]["verified_constraints"] == ["Constraint A"])
+    check("evidence_chain normalizes invalid entries", len(show2["thinking"]["evidence_chain"]) == 1)
+    check("partial progress update preserves completion_signal", show2["progress"]["completion_signal"] == "Step one is done and checked.")
     check("update ignores runtime patch", show2["runtime"]["mode"] == "inc")
     check("update ignores activation patch", show2["activation"]["status"] == "idle")
     check("update reports ignored keys", "Ignored keys: activation, runtime" in update_result["warnings"])
@@ -226,12 +253,20 @@ def main() -> int:
         },
         "thinking": {
             "inferred_intent": "Prepare to implement a narrow production slice.",
+            "evidence_chain": [
+                {
+                    "claim": "The scoped slice is the current authorized candidate.",
+                    "basis": "The user approved the scoped plan.",
+                    "implication": "Keep changes reviewable and tested.",
+                }
+            ],
             "expert_defaults": ["Prefer incremental, tested delivery."],
             "verified_constraints": ["The test command must stay green."],
             "open_decisions": [],
         },
         "progress": {
             "next_action": "Modify the controller to add the new entrypoint.",
+            "completion_signal": "The first slice is implemented behind tests.",
         },
     }
     cli_update = run_cli(env, "update", "--json", json.dumps(cli_patch))
@@ -257,8 +292,8 @@ def main() -> int:
     check("cli checkpoint adds history", len(cli_show_after_checkpoint["progress"]["checkpoint_history"]) == 1)
 
     cli_context = run_cli(env, "context")
-    check("cli context stays in inc before authorization", "continue using judgment to reduce uncertainty" in cli_context["message"])
-    check("cli context leaves active timing to agent judgment", "Whether and when to raise a transition to ACTIVE is a matter of agent judgment" in cli_context["message"])
+    check("cli context stays in inc before authorization", "building and revising the evidence chain" in cli_context["message"])
+    check("cli context supports standalone exploration", "standalone exploration mode" in cli_context["message"])
 
     run_cli(env, "authorize-active", "--evidence", "User said: go ahead and build it.", "--scope", "standing_session")
     check("cli authorize-active stores scope", run_cli(env, "show")["state"]["activation"]["scope"] == "standing_session")
@@ -407,11 +442,13 @@ def main() -> int:
 
     legacy_context = run_cli(legacy_env, "context", "--session-id", legacy_session)
     check("legacy context requests repair", legacy_context["action"] == "repair_required")
-    check("legacy context mentions explicit reconstruction", "reconstruct the new runtime state explicitly" in legacy_context["message"])
+    check("legacy context defers unrelated repair", "If the latest request is unrelated to LLR" in legacy_context["message"])
+    check("legacy context explains when to repair", "only if the current request depends on the long-running objective" in legacy_context["message"])
 
     legacy_stop = run_cli(legacy_env, "stop-decision", "--session-id", legacy_session)
-    check("legacy stop blocks", legacy_stop["decision"] == "block")
-    check("legacy stop mentions legacy schema", "legacy state schema detected" in legacy_stop["reason"])
+    check("legacy stop allows agent judgment", legacy_stop["decision"] == "allow")
+    check("legacy stop marks repair requirement", legacy_stop["repair_required"] is True)
+    check("legacy stop mentions guard uncertainty", "stop guard cannot determine whether ACTIVE is live" in legacy_stop["reason"])
 
     # 6. Broken state behavior
     broken_env = set_env(tempfile.mkdtemp(prefix="llr-broken-test-"))
@@ -421,10 +458,11 @@ def main() -> int:
 
     broken_context = run_cli(broken_env, "context", "--session-id", "broken-session")
     check("broken state context requests repair", broken_context["action"] == "repair_required")
+    check("broken state context allows unrelated work", "leave the broken state unresolved for now" in broken_context["message"])
 
     broken_stop = run_cli(broken_env, "stop-decision", "--session-id", "broken-session")
-    check("broken state stop blocks", broken_stop["decision"] == "block")
-    check("broken state stop requires repair", "could not be loaded" in broken_stop["reason"])
+    check("broken state stop allows agent judgment", broken_stop["decision"] == "allow")
+    check("broken state stop marks repair requirement", broken_stop["repair_required"] is True)
 
     broken_hook = run_hook(
         HOOK_PATH,
@@ -444,7 +482,7 @@ def main() -> int:
         },
         legacy_env,
     )
-    check("legacy hook injects reconstruction guidance", "reconstruct the new runtime state explicitly" in legacy_hook["hookSpecificOutput"]["additionalContext"])
+    check("legacy hook defers unrelated repair", "If the latest request is unrelated to LLR" in legacy_hook["hookSpecificOutput"]["additionalContext"])
 
     print("\\nALL CHECKS PASSED")
     return 0

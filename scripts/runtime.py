@@ -55,6 +55,24 @@ def _append_list_summary(parts: list[str], label: str, values: object, max_items
     parts.append(f"{label}={summary}")
 
 
+def _append_evidence_chain_summary(parts: list[str], values: object, max_items: int = 2) -> None:
+    if not isinstance(values, list):
+        return
+    claims: list[str] = []
+    for value in values:
+        if not isinstance(value, dict):
+            continue
+        claim = clean_string(value.get("claim", ""))
+        if claim:
+            claims.append(claim)
+    if not claims:
+        return
+    summary = ", ".join(claims[:max_items])
+    if len(claims) > max_items:
+        summary += ", ..."
+    parts.append("evidence_chain=" + summary)
+
+
 def render_brief_context(state: dict[str, Any]) -> str:
     parts: list[str] = []
     runtime = state["runtime"]
@@ -91,6 +109,7 @@ def render_brief_context(state: dict[str, Any]) -> str:
     _append_list_summary(parts, "requirements", contract.get("requirements"))
     _append_list_summary(parts, "success", contract.get("success_criteria"))
     _append_list_summary(parts, "guardrails", contract.get("guardrails"))
+    _append_evidence_chain_summary(parts, thinking.get("evidence_chain"))
     _append_list_summary(parts, "expert_defaults", thinking.get("expert_defaults"))
     _append_list_summary(parts, "verified_constraints", thinking.get("verified_constraints"))
     _append_list_summary(parts, "open_decisions", thinking.get("open_decisions"))
@@ -102,6 +121,10 @@ def render_brief_context(state: dict[str, Any]) -> str:
     next_action = clean_string(progress.get("next_action", ""))
     if next_action:
         parts.append("next_action=" + next_action)
+
+    completion_signal = clean_string(progress.get("completion_signal", ""))
+    if completion_signal:
+        parts.append("completion_signal=" + completion_signal)
 
     checkpoint_history = progress.get("checkpoint_history")
     if isinstance(checkpoint_history, list) and checkpoint_history:
@@ -116,6 +139,12 @@ def render_brief_context(state: dict[str, Any]) -> str:
             if summary:
                 text += f" ({summary})"
             parts.append(text)
+
+    closure = progress.get("closure", {})
+    if isinstance(closure, dict):
+        state_value = clean_string(closure.get("state", ""))
+        if state_value and state_value != "open":
+            parts.append("closure=" + state_value)
 
     return " | ".join(parts)
 
@@ -153,6 +182,8 @@ def build_readiness(state: dict[str, Any]) -> dict[str, Any]:
         or clean_list(thinking.get("verified_constraints"))
     )
     has_guardrails = bool(clean_list(contract.get("guardrails")))
+    has_evidence_chain = bool(thinking.get("evidence_chain"))
+    has_completion_signal = bool(clean_string(progress.get("completion_signal", "")))
 
     score = 0
     if project_root:
@@ -184,6 +215,12 @@ def build_readiness(state: dict[str, Any]) -> dict[str, Any]:
 
     if not has_guardrails:
         warnings.append("No guardrails are captured yet.")
+
+    if not has_evidence_chain:
+        warnings.append("No evidence chain is captured yet.")
+
+    if not has_completion_signal:
+        warnings.append("No completion signal is captured yet.")
 
     if clean_string(runtime.get("mode", "")) == "inc":
         if not clean_string(thinking.get("inferred_intent", "")):
@@ -225,8 +262,11 @@ def broken_state_message(path: Path, error: str) -> str:
         + str(path)
         + ", but it could not be loaded ("
         + error
-        + "). Do not treat this as disabled. Repair or recreate a valid state before continuing. "
-        + "If the long-running objective is already finished or intentionally stopped, close it explicitly instead of ignoring the broken file."
+        + "). First address the user's latest message. "
+        + "Repair or recreate the LLR state only if the current request depends on the long-running objective, asks to resume or continue LLR work, or requires LLR state to decide the next step. "
+        + "If the latest request is unrelated to LLR, leave the broken state unresolved for now and continue normally. "
+        + "When repair is needed, inspect the existing JSON if useful, infer only durable current truth, and rebuild a valid state through the runtime API. "
+        + "If the long-running objective is already finished or intentionally stopped, close it explicitly."
     )
 
 
@@ -236,32 +276,37 @@ def stop_repair_message(path: Path, error: str) -> str:
         + str(path)
         + ", but it could not be loaded ("
         + error
-        + "). Do not stop or assume the runtime is disabled. Repair or recreate a valid state now. "
-        + "If the objective is truly complete, the user explicitly asked to stop, or the session should be abandoned, close it explicitly before ending the turn. "
-        + "Do not mention this checkpoint or the gate file to the user."
+        + "). The stop guard cannot determine whether ACTIVE is live. "
+        + "If this turn depends on LLR or the long-running objective, repair or recreate a valid state before relying on it. "
+        + "If the latest user request is unrelated to LLR and has been answered, it is okay to stop without repairing now."
     )
 
 
 def build_stop_prompt(path: Path, state: dict[str, Any], had_assistant_text: bool) -> str:
     context = render_brief_context(state)
-    if had_assistant_text:
-        prompt = _append_sentence(
-            "Stop checkpoint. This session is in long-long-run ACTIVE mode. " + context,
-            "Do not stop because of the checkpoint. Continue with the next action now unless blocked by user input, permissions, or unavailable external resources.",
+    if not context:
+        context = "(no stored brief context)"
+    no_text_note = ""
+    if not had_assistant_text:
+        no_text_note = (
+            " Your latest completion attempt produced no user-visible assistant text;"
+            " that is not a reason to stop."
         )
-    else:
-        prompt = _append_sentence(
-            "Stop checkpoint. This session is in long-long-run ACTIVE mode, and your latest completion attempt produced no user-visible assistant text. "
-            + context,
-            "Continue with the next action now unless the objective is truly complete or genuinely blocked.",
-        )
-    prompt += (
-        " If the objective is truly complete, the user explicitly asked to stop, or the work is genuinely blocked, "
-        + "close the runtime state at "
-        + str(path)
-        + " before ending the turn. Do not mention this checkpoint or the gate file to the user."
+    return (
+        "Stop checkpoint. This session is in long-long-run ACTIVE mode."
+        + no_text_note
+        + "\n\nCurrent context: "
+        + context
+        + "\n\nUse the current contract, evidence chain, latest checkpoint, next action, "
+        + "completion signal, and blocker to decide whether the work is actually ready to stop."
+        + "\n\nDo not stop merely because you produced a useful update. Stop only if the objective "
+        + "is complete, the user asked to stop, the work is genuinely blocked, or the evidence "
+        + "shows that the mainline should return to INC."
+        + "\n\nIf there is a clear, valuable, contract-covered next step, continue with that step "
+        + "now. If the stored next_action is stale, update it from the current evidence before "
+        + "continuing."
+        + "\n\nDo not mention this checkpoint or the gate file to the user."
     )
-    return prompt
 
 
 def _append_checkpoint_history(
@@ -377,7 +422,7 @@ class LongLongRunRuntime:
                 "brief_context": render_brief_context(state),
                 "readiness": readiness,
                 "objective": clean_string(state["contract"].get("objective", "")),
-                "close_reason": clean_string(runtime.get("close_reason", "")),
+                "closure": state["progress"].get("closure", {}),
                 "authorized": clean_string(state["activation"].get("status", "")) == "authorized",
             }
         )
@@ -612,6 +657,12 @@ class LongLongRunRuntime:
             return payload
 
         state["runtime"]["mode"] = "active"
+        state["progress"]["closure"] = {
+            "state": "open",
+            "reason": "",
+            "summary": "",
+            "closed_at": "",
+        }
         saved = save_state(self.identity.path, state, transition="activate")
         payload = self._status_payload(exists=True, state=saved, action="activate")
         payload["activated"] = True
@@ -641,6 +692,12 @@ class LongLongRunRuntime:
         if next_action:
             state["progress"]["next_action"] = clean_string(next_action)
         state["runtime"]["mode"] = "inc"
+        state["progress"]["closure"] = {
+            "state": "open",
+            "reason": "",
+            "summary": "",
+            "closed_at": "",
+        }
         state["activation"] = {
             "status": "idle",
             "scope": "single",
@@ -671,8 +728,14 @@ class LongLongRunRuntime:
                 next_action=clean_string(state["progress"].get("next_action", "")),
                 mode=clean_string(state["runtime"].get("mode", "")),
             )
+        closed_at = now_iso()
         state["runtime"]["mode"] = "disabled"
-        state["runtime"]["close_reason"] = clean_string(reason)
+        state["progress"]["closure"] = {
+            "state": "closed",
+            "reason": clean_string(reason),
+            "summary": summary,
+            "closed_at": closed_at,
+        }
         state["activation"] = {
             "status": "idle",
             "scope": "single",
@@ -717,7 +780,8 @@ class LongLongRunRuntime:
             action = "inject_context"
             message = _append_sentence(
                 "This session has an active long-long-run objective. " + context,
-                "First address the user's latest message. Then resume the active mainline automatically.",
+                "First address the user's latest message. Then resume the authorized mainline automatically if the latest message does not change the contract, block the work, or require a return to INC. "
+                + "Use the evidence chain to choose the next reasonable action. ACTIVE means authorized continuation until the objective is complete, blocked, stopped by the user, or changed enough to require INC.",
             )
         elif mode == "inc":
             action = "inject_context"
@@ -725,17 +789,20 @@ class LongLongRunRuntime:
                 message = _append_sentence(
                     "This session is in long-long-run INC mode, and the user has already authorized ACTIVE. "
                     + context,
-                    "First address the user's latest message. Then activate when you judge that the work should now be carried as the authorized mainline.",
+                    "First address the user's latest message. Then activate when you judge that the work should now be carried as the authorized mainline. "
+                    + "If the current evidence chain no longer supports the contract, stay in INC and surface the needed confirmation.",
                 )
             else:
                 message = _append_sentence(
-                    "This session is in long-long-run INC mode (Intent Noise Cancellation). "
+                    "This session is in long-long-run INC mode. "
                     + context,
-                    "First address the user's latest message. Then continue using judgment to reduce uncertainty, clarify the contract, and make the work more legible. "
+                    "First address the user's latest message. INC is for reducing uncertainty, building and revising the evidence chain, clarifying the contract, and making the work more legible. "
+                    + "INC may be used as a standalone exploration mode; it does not have to lead to ACTIVE. "
+                    + "INC is not limited to passive planning. You may inspect files, run commands, create probes, or make bounded changes when that is the right way to obtain evidence, unless the user has narrowed the scope. "
+                    + "Keep current evidence fresh: remove or replace evidence that has been overturned. Record major evidence changes in checkpoint history with a short summary, but keep evidence_chain focused on current effective evidence. "
                     + "If continuing INC exploration, name the evidence gap, next bounded probe, expected signal, and stop condition when that helps keep exploration bounded. "
-                    + "INC is not limited to passive analysis, but it does not grant implicit authorization to treat the work as the committed mainline. "
-                    + "Surface expert defaults and verified constraints clearly so the user can adjust them. "
-                    + "Whether and when to raise a transition to ACTIVE is a matter of agent judgment; entering ACTIVE still requires explicit user authorization.",
+                    + "Surface expert defaults, assumptions, verified constraints, and open decisions clearly so the user can adjust them. "
+                    + "Do not treat INC as authorization to carry the work as the committed mainline. Entering ACTIVE still requires explicit user authorization.",
                 )
 
         return {
@@ -765,8 +832,9 @@ class LongLongRunRuntime:
         state, error = self._load()
         if error:
             return {
-                "ok": False,
-                "decision": "block",
+                "ok": True,
+                "decision": "allow",
+                "repair_required": True,
                 "session_id": self.identity.session_id,
                 "path": str(self.identity.path),
                 "identity_source": self.identity.source,

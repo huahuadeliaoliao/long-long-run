@@ -123,7 +123,6 @@ def default_state(session_id: str, project_root: str = "") -> dict[str, Any]:
             "created_at": timestamp,
             "updated_at": timestamp,
             "last_transition": "",
-            "close_reason": "",
         },
         "contract": {
             "objective": "",
@@ -136,6 +135,7 @@ def default_state(session_id: str, project_root: str = "") -> dict[str, Any]:
         },
         "thinking": {
             "inferred_intent": "",
+            "evidence_chain": [],
             "expert_defaults": [],
             "verified_constraints": [],
             "assumptions": [],
@@ -152,9 +152,16 @@ def default_state(session_id: str, project_root: str = "") -> dict[str, Any]:
             "latest_checkpoint": "",
             "checkpoint_history": [],
             "next_action": "",
+            "completion_signal": "",
             "blocker": {
                 "kind": "none",
                 "summary": "",
+            },
+            "closure": {
+                "state": "open",
+                "reason": "",
+                "summary": "",
+                "closed_at": "",
             },
         },
     }
@@ -195,6 +202,43 @@ def normalize_checkpoint_history(values: object) -> list[dict[str, str]]:
     return cleaned[-CHECKPOINT_HISTORY_LIMIT:]
 
 
+def normalize_evidence_chain(values: object) -> list[dict[str, str]]:
+    if not isinstance(values, list):
+        return []
+
+    cleaned: list[dict[str, str]] = []
+    for value in values:
+        if not isinstance(value, dict):
+            continue
+        entry = {
+            "claim": clean_string(value.get("claim", "")),
+            "basis": clean_string(value.get("basis", "")),
+            "implication": clean_string(value.get("implication", "")),
+        }
+        if any(entry.values()):
+            cleaned.append(entry)
+    return cleaned
+
+
+def normalize_closure(value: object) -> dict[str, str]:
+    closure = {
+        "state": "open",
+        "reason": "",
+        "summary": "",
+        "closed_at": "",
+    }
+    if not isinstance(value, dict):
+        return closure
+    state = clean_string(value.get("state", "")).lower()
+    if state not in {"open", "closed"}:
+        state = "open"
+    closure["state"] = state
+    closure["reason"] = clean_string(value.get("reason", ""))
+    closure["summary"] = clean_string(value.get("summary", ""))
+    closure["closed_at"] = clean_string(value.get("closed_at", ""))
+    return closure
+
+
 def _merge_contract(new_contract: dict[str, Any]) -> dict[str, Any]:
     objective = clean_string(new_contract.get("objective", ""))
     why_now = clean_string(new_contract.get("why_now", ""))
@@ -218,6 +262,7 @@ def _merge_contract(new_contract: dict[str, Any]) -> dict[str, Any]:
 
 def _merge_thinking(new_thinking: dict[str, Any]) -> dict[str, Any]:
     inferred_intent = clean_string(new_thinking.get("inferred_intent", ""))
+    evidence_chain = normalize_evidence_chain(new_thinking.get("evidence_chain"))
     expert_defaults = clean_list(new_thinking.get("expert_defaults"))
     verified_constraints = clean_list(new_thinking.get("verified_constraints"))
     assumptions = clean_list(new_thinking.get("assumptions"))
@@ -225,6 +270,7 @@ def _merge_thinking(new_thinking: dict[str, Any]) -> dict[str, Any]:
     open_decisions = clean_list(new_thinking.get("open_decisions"))
     return {
         "inferred_intent": inferred_intent,
+        "evidence_chain": evidence_chain,
         "expert_defaults": expert_defaults,
         "verified_constraints": verified_constraints,
         "assumptions": assumptions,
@@ -252,12 +298,16 @@ def _merge_progress(new_progress: dict[str, Any]) -> dict[str, Any]:
     latest_checkpoint = clean_string(new_progress.get("latest_checkpoint", ""))
     checkpoint_history = normalize_checkpoint_history(new_progress.get("checkpoint_history"))
     next_action = clean_string(new_progress.get("next_action", ""))
+    completion_signal = clean_string(new_progress.get("completion_signal", ""))
     blocker = normalize_blocker(new_progress.get("blocker"))
+    closure = normalize_closure(new_progress.get("closure"))
     return {
         "latest_checkpoint": latest_checkpoint,
         "checkpoint_history": checkpoint_history,
         "next_action": next_action,
+        "completion_signal": completion_signal,
         "blocker": blocker,
+        "closure": closure,
     }
 
 
@@ -347,9 +397,6 @@ def normalize_state(
     ]["updated_at"]
     normalized["runtime"]["last_transition"] = clean_string(
         runtime_src.get("last_transition", "")
-    )
-    normalized["runtime"]["close_reason"] = clean_string(
-        runtime_src.get("close_reason", state.get("close_reason", ""))
     )
 
     contract_src = state.get("contract")
