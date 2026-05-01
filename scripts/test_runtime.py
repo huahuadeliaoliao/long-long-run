@@ -93,6 +93,10 @@ def main() -> int:
     check("inc context supports standalone exploration", "standalone exploration mode" in ctx0["message"])
     check("inc context allows bounded changes", "make bounded changes" in ctx0["message"])
     check("inc context keeps evidence fresh", "remove or replace evidence that has been overturned" in ctx0["message"])
+    check("inc context prompts domain calibration", "bounded domain calibration pass" in ctx0["message"])
+    check("inc context prompts discovery keywords", "discovery keywords" in ctx0["message"])
+    check("inc context prompts authoritative recent sources", "authoritative and recent sources" in ctx0["message"])
+    check("inc context asks for skip reason", "If skipping external calibration" in ctx0["message"])
 
     rt.update_contract(
         {

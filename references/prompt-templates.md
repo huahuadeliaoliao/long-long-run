@@ -15,6 +15,8 @@ INC is not limited to passive planning. You may inspect files, run commands, cre
 
 Keep current evidence fresh: remove or replace evidence that has been overturned. Record major evidence changes in checkpoint history with a short summary, but keep evidence_chain focused on current effective evidence.
 
+When domain standards, current practice, or expert framing may affect the task, run a bounded domain calibration pass before presenting expert defaults. Do not search only for the answer you already expect; derive discovery keywords from the user's wording, project vocabulary, artifact type, audience, quality bar, known tools, failure modes, standards, and ecosystem terms. If the domain is version-sensitive or fast-moving, prefer authoritative and recent sources when useful. If skipping external calibration, make the reason clear.
+
 Surface expert defaults, assumptions, verified constraints, and open decisions clearly so the user can adjust them.
 
 Do not treat INC as authorization to carry the work as the committed mainline. Entering ACTIVE still requires explicit user authorization.

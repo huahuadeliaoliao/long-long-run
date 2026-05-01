@@ -35,6 +35,36 @@ Use domain expertise to identify:
 
 When domain standards may have changed or are uncertain, search or inspect primary sources.
 
+## Bounded Domain Calibration
+
+When domain standards, current practice, or expert framing may affect the task, run a bounded domain calibration pass before presenting expert defaults.
+
+Do not search only for the answer you already expect.
+First derive discovery keywords from the user's wording, project vocabulary, artifact type, audience, quality bar, known tools, failure modes, standards, and ecosystem terms.
+
+Use calibration to discover:
+
+- domain vocabulary
+- authoritative sources
+- current expert practices
+- common failure modes
+
+If the domain is version-sensitive or fast-moving, prefer authoritative and recent sources, and include version or recency terms when useful.
+
+If external calibration is skipped, make the reason clear:
+
+- project evidence is sufficient
+- the user narrowed the scope
+- network use is unavailable
+- the task is purely local
+
+Use calibration results to update:
+
+- expert_defaults: professional defaults discovered or confirmed by calibration
+- verified_constraints: constraints supported by authoritative sources, project evidence, or user statements
+- evidence_chain: only the claims that materially affect the current task
+- open_decisions: inferred needs that still require user confirmation
+
 ## Project Map
 
 Ground the task in direct evidence:

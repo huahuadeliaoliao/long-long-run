@@ -110,6 +110,15 @@ That means:
 - propose quality standards and guardrails
 - search when those standards are uncertain
 
+Before presenting expert defaults, the agent should ask whether the domain needs calibration.
+
+If current practice, ecosystem changes, standards, tools, versions, safety, policy, design conventions, or industry norms may affect the answer, perform a bounded domain calibration pass.
+
+This pass should discover domain vocabulary, authoritative sources, current expert practices, and common failure modes.
+It should not merely search for the answer the agent already expected.
+
+If external calibration is skipped, the agent should make the reason visible.
+
 But those defaults must not stay implicit.
 
 The agent should surface them clearly so the user can:
