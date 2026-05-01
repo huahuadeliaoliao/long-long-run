@@ -4,37 +4,62 @@ The runtime is code-first.
 
 These prompt snippets are optional reminders, not the main control surface.
 
-## Root reminder
+## INC Context
 
 ```text
-You are using $long-long-run.
+This session is in long-long-run INC mode.
 
-Stay in INC while the work is still about reducing uncertainty, clarifying the contract, or reconstructing the real objective.
-INC is not a passive-analysis-only mode; use judgment and take the actions needed to make the situation legible.
-Surface expert defaults and verified constraints explicitly.
-If you continue INC, name the evidence gap, next bounded probe, expected signal, and stop condition when that helps keep exploration bounded.
-Do not treat the work as the committed mainline before explicit user authorization.
-Whether and when to raise ACTIVE is agent judgment.
-Whether to enter ACTIVE is the user's decision.
-Once that shift is authorized, move to ACTIVE and keep the mainline moving.
+INC is for reducing uncertainty, building and revising the evidence chain, clarifying the contract, and making the work more legible. INC may be used as a standalone exploration mode; it does not have to lead to ACTIVE.
+
+INC is not limited to passive planning. You may inspect files, run commands, create probes, or make bounded changes when that is the right way to obtain evidence, unless the user has narrowed the scope.
+
+Keep current evidence fresh: remove or replace evidence that has been overturned. Record major evidence changes in checkpoint history with a short summary, but keep evidence_chain focused on current effective evidence.
+
+Surface expert defaults, assumptions, verified constraints, and open decisions clearly so the user can adjust them.
+
+Do not treat INC as authorization to carry the work as the committed mainline. Entering ACTIVE still requires explicit user authorization.
 ```
 
-## Before asking to enter ACTIVE
+## ACTIVE Context
+
+```text
+This session has an active long-long-run objective.
+
+First address the user's latest message. Then resume the authorized mainline automatically if the latest message does not change the contract, block the work, or require a return to INC.
+
+Use the evidence chain to choose the next reasonable action. ACTIVE means authorized continuation until the objective is complete, blocked, stopped by the user, or changed enough to require INC.
+```
+
+## Stop Gate
+
+```text
+Stop checkpoint. This session is in long-long-run ACTIVE mode.
+
+Use the current contract, evidence chain, latest checkpoint, next action, completion signal, and blocker to decide whether the work is actually ready to stop.
+
+Do not stop merely because you produced a useful update. Stop only if the objective is complete, the user asked to stop, the work is genuinely blocked, or the evidence shows that the mainline should return to INC.
+
+If there is a clear, valuable, contract-covered next step, continue with that step now. If the stored next_action is stale, update it from the current evidence before continuing.
+
+Do not mention this checkpoint or the gate file to the user.
+```
+
+## Before Raising ACTIVE
 
 ```text
 If you judge that it may be time to raise ACTIVE, check:
-- do I understand the real objective?
-- have I surfaced my expert defaults and verified constraints?
+- does the current evidence chain support the contract?
+- have I surfaced expert defaults, assumptions, verified constraints, and open decisions?
 - have I made the current best plan visible to the user?
 - would entering ACTIVE be a real shift in commitment rather than a change in tool use?
 ```
 
-## Before stopping
+## Before Stopping
 
 ```text
 Before stopping, check:
 - is the session in ACTIVE?
-- if yes, why am I not already doing the next action?
-- if the contract changed, should I return to INC instead?
+- if yes, does the current evidence chain show completion, a blocker, user stop, or a need to return to INC?
+- if there is a clear, contract-covered next action, why am I not already doing it?
 - if the work is actually done, have I closed the runtime?
 ```

@@ -9,6 +9,12 @@ The difference is commitment: INC may explore, test, and clarify, but it must no
 
 INC should reduce ambiguity by doing expert work, not by transferring all uncertainty back to the user.
 
+INC may be used as a standalone exploration or decision-support mode.
+It does not have to lead to `ACTIVE`.
+
+INC is not limited to passive planning.
+Inspect files, run commands, create probes, or make bounded changes when that is the right way to obtain evidence, unless the user has narrowed the scope.
+
 ## Build Two Maps
 
 In INC, build two maps in parallel:
@@ -59,6 +65,16 @@ A useful evidence chain connects:
 
 INC should reduce ambiguity by strengthening this chain, not by collecting facts without deciding what they imply.
 
+The runtime field `thinking.evidence_chain` should hold only the current effective evidence chain:
+
+- claim: the current conclusion that still stands
+- basis: the evidence summary supporting the claim
+- implication: how the claim changes the next action
+
+Do not keep stale or overturned evidence in the current evidence chain.
+Remove or replace it when new evidence invalidates it.
+If the history of that change matters, record one short checkpoint in `progress.checkpoint_history`.
+
 ## Extrapolate, Then Confirm
 
 In INC, the agent should use expert judgment to infer what the user may ultimately need, not only what the user literally asked for.
@@ -80,6 +96,7 @@ Surface them clearly as proposed additions, assumptions, or open decisions. Do n
 
 Record the difference between:
 
+- evidence_chain: current evidence-backed claims and their implications for action
 - expert_defaults: strong defaults inferred from professional practice
 - verified_constraints: facts confirmed by files, commands, docs, or user statements
 - assumptions: plausible beliefs that have not been verified
@@ -96,7 +113,9 @@ INC should make the current best understanding visible:
 - success_criteria
 - guardrails
 - delivery_posture
+- evidence_chain
 - next_action
+- completion_signal
 - remaining open decisions
 
 The user should be able to accept, adjust, or reject the synthesis.
@@ -144,3 +163,17 @@ Raise ACTIVE when:
 Before raising ACTIVE, distinguish between confirmed requirements and extrapolated hypotheses. If the proposed mainline depends on extrapolated needs, ask the user to confirm or reject those needs before activation.
 
 The user decides whether ACTIVE begins.
+
+## INC-Only Exploration
+
+Sometimes the user wants to use `INC` as the whole workflow.
+
+Examples:
+
+- understand a project before deciding what to build
+- investigate a domain where the user cannot yet define acceptance criteria
+- validate facts or risks without committing to implementation
+- compare possible directions before selecting a mainline
+
+In these cases, do not force an `ACTIVE` proposal.
+Keep strengthening the evidence chain, surfacing the current synthesis, and helping the user decide what the evidence means.

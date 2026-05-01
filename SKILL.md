@@ -15,15 +15,17 @@ Use this skill when the work is not a short edit-and-exit task. Typical triggers
 
 ## What this skill is
 
-`long-long-run` is a code-first runtime harness.
+`long-long-run` is a code-first, agent-owned evidence-chain harness.
 
 It is not a questionnaire and it is not a giant state form.
+It is not a project management system or evidence archive.
 
 The runtime owns:
 
 - session binding
 - mode semantics
 - authorization to start implementation
+- current evidence-chain context
 - progress checkpoints
 - hook context and stop behavior
 
@@ -52,7 +54,12 @@ This is the default mode.
 `INC` is for reducing uncertainty, clarifying the contract, and converging on the current best understanding of the work.
 
 `INC` is not limited to passive analysis or conversational planning.
-The agent should use judgment and take the actions needed to make the work more legible, test assumptions, and clarify the contract, unless the user narrows that scope.
+The agent should use judgment and take the actions needed to build or revise the evidence chain, make the work more legible, test assumptions, and clarify the contract, unless the user narrows that scope.
+
+`INC` may be used as a standalone exploration or decision-support mode.
+It does not have to lead to `ACTIVE`.
+
+`INC` may inspect files, run commands, create probes, or make bounded changes when that is the right way to obtain evidence.
 
 The distinction is semantic, not mechanical.
 
@@ -68,6 +75,8 @@ The distinction is semantic, not mechanical.
 
 `ACTIVE` is not defined by a different tool set.
 It is defined by commitment and ownership: the work is now being pursued as the authorized implementation and delivery track.
+
+`ACTIVE` means authorized continuation until the objective is complete, blocked, stopped by the user, or changed enough to require `INC`.
 
 `ACTIVE` has the stop guard.
 
@@ -88,6 +97,8 @@ The user decides whether to enter `ACTIVE`.
 The agent decides whether and when it is appropriate to raise that transition.
 
 The runtime may enter `ACTIVE` only after explicit user authorization.
+
+If new evidence shows that the authorized mainline needs a material change, return to `INC` or ask the user for confirmation instead of silently expanding the contract.
 
 ## Expert defaults must be visible
 
@@ -131,15 +142,29 @@ The runtime keeps only:
 
 Do not try to store every thought.
 
-Only store durable truth that changes runtime behavior.
+Only store current durable truth that changes runtime behavior.
+
+`thinking` is a working model, not private chain-of-thought.
+`thinking.evidence_chain` should contain only current effective evidence.
+If evidence is overturned, remove or replace it in `evidence_chain`; record the major change as a short checkpoint if the history matters.
+
+`progress.completion_signal` records what evidence would make the agent judge the current objective complete enough to stop.
+
+`progress.closure` records whether the current long-running objective is open or closed.
+
+The stop guard helps prevent premature stopping in `ACTIVE`.
+It prevents stopping merely because a local step produced a useful update while the authorized mainline still has a clear, contract-covered next step.
 
 ## Legacy states
 
 This runtime does not auto-migrate old `long-long-run` JSON.
 
-If an older schema is found, the runtime should block normal use and surface a repair requirement.
+If an older schema is found, normal runtime operations should surface a repair requirement.
 
-At that point, the agent should:
+Repair is required before relying on LLR state.
+It does not have to happen before answering an unrelated user message.
+
+When repair is needed, the agent should:
 
 - read the old JSON explicitly
 - infer the still-valid objective, contract, and progress
@@ -198,6 +223,13 @@ print(
     rt.update_thinking(
         {
             "inferred_intent": "Stay in INC while reconstructing the project from its artifacts.",
+            "evidence_chain": [
+                {
+                    "claim": "The project needs evidence-backed mapping before implementation.",
+                    "basis": "The user asked for a reliable takeover and explicit approval before active work.",
+                    "implication": "Continue INC until the contract and authorization boundary are legible.",
+                }
+            ],
             "expert_defaults": ["Start from repo structure, docs, configs, and run entrypoints."],
             "verified_constraints": ["Use the actual environment and deployment docs as the source of truth."],
             "open_decisions": ["Whether to begin implementation after the mapping is complete."],
@@ -209,6 +241,16 @@ print(
     rt.checkpoint(
         summary="Finished the first project scan.",
         next_action="Read the backend entrypoints and dependency manifests.",
+    )
+)
+
+print(
+    rt.update(
+        {
+            "progress": {
+                "completion_signal": "The project map and agreed execution path are captured."
+            }
+        }
     )
 )
 PY
