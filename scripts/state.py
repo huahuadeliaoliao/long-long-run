@@ -67,7 +67,9 @@ class SessionIdentity:
     warnings: list[str]
 
 
-def resolve_identity(session_id: Optional[str] = None, path: Optional[str] = None) -> SessionIdentity:
+def resolve_identity(
+    session_id: Optional[str] = None, path: Optional[str] = None
+) -> SessionIdentity:
     env_session_id = clean_string(os.environ.get("CODEX_THREAD_ID", ""))
     warnings: list[str] = []
 
@@ -79,7 +81,11 @@ def resolve_identity(session_id: Optional[str] = None, path: Optional[str] = Non
             warnings.append(
                 "The explicit path stem does not match the explicit session_id; using the explicit path."
             )
-        if env_session_id and derived_session_id and env_session_id != derived_session_id:
+        if (
+            env_session_id
+            and derived_session_id
+            and env_session_id != derived_session_id
+        ):
             warnings.append(
                 "The resolved session differs from CODEX_THREAD_ID; using the explicit path/session_id."
             )
@@ -296,7 +302,9 @@ def _merge_activation(new_activation: dict[str, Any]) -> dict[str, Any]:
 
 def _merge_progress(new_progress: dict[str, Any]) -> dict[str, Any]:
     latest_checkpoint = clean_string(new_progress.get("latest_checkpoint", ""))
-    checkpoint_history = normalize_checkpoint_history(new_progress.get("checkpoint_history"))
+    checkpoint_history = normalize_checkpoint_history(
+        new_progress.get("checkpoint_history")
+    )
     next_action = clean_string(new_progress.get("next_action", ""))
     completion_signal = clean_string(new_progress.get("completion_signal", ""))
     blocker = normalize_blocker(new_progress.get("blocker"))
@@ -389,12 +397,14 @@ def normalize_state(
     normalized["runtime"]["project_root"] = (
         clean_string(runtime_src.get("project_root", "")) or project_root
     )
-    normalized["runtime"]["created_at"] = clean_string(runtime_src.get("created_at", "")) or normalized[
-        "runtime"
-    ]["created_at"]
-    normalized["runtime"]["updated_at"] = clean_string(runtime_src.get("updated_at", "")) or normalized[
-        "runtime"
-    ]["updated_at"]
+    normalized["runtime"]["created_at"] = (
+        clean_string(runtime_src.get("created_at", ""))
+        or normalized["runtime"]["created_at"]
+    )
+    normalized["runtime"]["updated_at"] = (
+        clean_string(runtime_src.get("updated_at", ""))
+        or normalized["runtime"]["updated_at"]
+    )
     normalized["runtime"]["last_transition"] = clean_string(
         runtime_src.get("last_transition", "")
     )
@@ -422,9 +432,13 @@ def normalize_state(
     return normalized
 
 
-def load_state_with_error(path: Path, session_id_hint: str = "", project_root_hint: str = "") -> tuple[dict[str, Any], Optional[str]]:
+def load_state_with_error(
+    path: Path, session_id_hint: str = "", project_root_hint: str = ""
+) -> tuple[dict[str, Any], Optional[str]]:
     if not path.is_file():
-        return default_state(session_id=session_id_hint, project_root=project_root_hint), None
+        return default_state(
+            session_id=session_id_hint, project_root=project_root_hint
+        ), None
     try:
         raw_text = path.read_text(encoding="utf-8")
     except OSError as exc:
@@ -452,7 +466,9 @@ def load_state_with_error(path: Path, session_id_hint: str = "", project_root_hi
     ), None
 
 
-def save_state(path: Path, state: dict[str, Any], transition: str = "") -> dict[str, Any]:
+def save_state(
+    path: Path, state: dict[str, Any], transition: str = ""
+) -> dict[str, Any]:
     normalized = normalize_state(state, session_id_hint=path.stem)
     runtime = normalized.setdefault("runtime", {})
     runtime["schema_version"] = STATE_SCHEMA_VERSION

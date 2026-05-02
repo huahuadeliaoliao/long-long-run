@@ -14,6 +14,11 @@ The agent should repair only when the latest request depends on LLR, asks to res
 
 Calls `context_for_user_prompt()`.
 
+`UserPromptSubmit` context should keep runtime state and behavioral instructions in separate
+tagged sections. Prompt-facing state should use hybrid tagged Markdown inside
+`<current_state>`.
+Compact one-line summaries are for status/debug output, not hook instructions.
+
 Behavior:
 
 - no runtime state -> no-op
@@ -62,6 +67,9 @@ The active stop prompt should ask the agent to use:
 - next action
 - completion signal
 - blocker
+
+The active stop prompt should use the same prompt-facing hybrid `<current_state>` structure as
+`UserPromptSubmit`.
 
 The agent may stop only when the objective is complete, the user asked to stop, the work is genuinely blocked, or the evidence shows that the mainline should return to `INC`.
 

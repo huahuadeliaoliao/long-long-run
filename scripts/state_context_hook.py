@@ -22,7 +22,9 @@ def main() -> int:
 
     runtime = current_runtime(session_id=session_id)
     context = runtime.context_for_user_prompt()
-    if context.get("action") in {"inject_context", "repair_required"} and context.get("message"):
+    if context.get("action") in {"inject_context", "repair_required"} and context.get(
+        "message"
+    ):
         print(
             json.dumps(
                 {
