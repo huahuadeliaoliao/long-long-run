@@ -344,6 +344,23 @@ def main() -> int:
         "active stop guard includes completion signal",
         "completion signal" in stop["reason"],
     )
+    check(
+        "active stop prompt includes runtime state path",
+        str(rt.identity.path) in stop["reason"],
+    )
+    check(
+        "active stop prompt requires closing completed runtime",
+        "close the LLR runtime state at" in stop["reason"],
+    )
+    check(
+        "active stop prompt rejects verbal-only stopping",
+        "Do not merely say stopping is okay while runtime.mode remains active."
+        in stop["reason"],
+    )
+    check(
+        "active stop prompt can return mainline to inc",
+        "return the LLR runtime state at" in stop["reason"],
+    )
     check_prompt_context("active stop prompt", stop["reason"], "ACTIVE", event="stop")
 
     returned = rt.return_to_inc(

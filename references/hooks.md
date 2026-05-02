@@ -72,5 +72,6 @@ The active stop prompt should use the same prompt-facing hybrid `<current_state>
 `UserPromptSubmit`.
 
 The agent may stop only when the objective is complete, the user asked to stop, the work is genuinely blocked, or the evidence shows that the mainline should return to `INC`.
+When the agent decides to stop because the objective is complete or the user asked to stop, the prompt should identify the runtime state path and require the agent to close that state before ending the turn.
 
 If `next_action` is stale, the agent should update it from current evidence before continuing.

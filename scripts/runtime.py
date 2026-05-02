@@ -594,6 +594,17 @@ def build_stop_prompt(
             "now. If the stored next_action is stale, update it from the current evidence before "
             "continuing."
         ),
+        (
+            "If you decide the objective is complete or the user asked to stop, close the LLR "
+            "runtime state at "
+            + str(path)
+            + " before ending the turn. Do not merely say stopping is okay while runtime.mode "
+            "remains active."
+        ),
+        (
+            "If the evidence shows the mainline should return to INC, return the LLR runtime "
+            "state at " + str(path) + " to INC before ending the turn."
+        ),
         "Do not mention this checkpoint or the gate file to the user.",
     ]
     if not had_assistant_text:
