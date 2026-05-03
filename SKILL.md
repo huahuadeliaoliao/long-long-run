@@ -2,7 +2,7 @@
 name: long-long-run
 description: Use when a task needs a persistent session-bound runtime for long-running execution, project exploration, recovery, monitoring, or continued progress toward one main objective while still handling temporary user interruptions.
 metadata:
-  short-description: Code-first harness for INC and authorized active runs
+  short-description: "LLR: INC evidence-chain exploration and ACTIVE authorized mainlines"
 ---
 
 # Long Long Run
