@@ -148,12 +148,17 @@ def main() -> int:
         "For substantive INC work" in ctx0["message"],
     )
     check(
-        "inc context prompts domain calibration",
-        "bounded domain calibration pass" in ctx0["message"],
+        "inc context prompts discovery before validation",
+        "discovery before validation" in ctx0["message"],
+    )
+    check("inc context prompts seed keywords", "seed keywords" in ctx0["message"])
+    check(
+        "inc context prompts user and project vocabulary",
+        "user's wording and project vocabulary" in ctx0["message"],
     )
     check(
-        "inc context prompts discovery keywords",
-        "discovery keywords" in ctx0["message"],
+        "inc context prompts focused validation",
+        "validate hypotheses" in ctx0["message"],
     )
     check(
         "inc context prompts authoritative recent sources",

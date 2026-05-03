@@ -413,13 +413,11 @@ INC_CONTEXT_INSTRUCTIONS = [
         "signal, and stop condition when that helps keep exploration bounded."
     ),
     (
-        "When domain standards, current practice, or expert framing may affect the task, run a "
-        "bounded domain calibration pass before presenting expert defaults. Do not search only "
-        "for the answer you already expect; derive discovery keywords from the user's wording, "
-        "project vocabulary, artifact type, audience, quality bar, known tools, failure modes, "
-        "standards, and ecosystem terms. If the domain is version-sensitive or fast-moving, "
-        "prefer authoritative and recent sources when useful. If skipping external calibration, "
-        "make the reason clear."
+        "For domain calibration, run discovery before validation: start with seed keywords from "
+        "the user's wording and project vocabulary, discover domain terms and quality bars, then "
+        "use focused searches to validate hypotheses. If the domain is version-sensitive or "
+        "fast-moving, prefer authoritative and recent sources when useful. If skipping external "
+        "calibration, make the reason clear."
     ),
     (
         "Surface expert defaults, assumptions, verified constraints, and open decisions clearly "

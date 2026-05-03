@@ -117,8 +117,8 @@ Before presenting expert defaults, the agent should ask whether the domain needs
 
 If current practice, ecosystem changes, standards, tools, versions, safety, policy, design conventions, or industry norms may affect the answer, perform a bounded domain calibration pass.
 
-This pass should discover domain vocabulary, authoritative sources, current expert practices, and common failure modes.
-It should not merely search for the answer the agent already expected.
+This pass should run discovery before validation: start from the user's wording and project vocabulary, discover domain terms and quality bars, then use focused searches to validate hypotheses.
+It should not start from remembered solution terms unless the user or project evidence already points there.
 
 If external calibration is skipped, the agent should make the reason visible.
 
