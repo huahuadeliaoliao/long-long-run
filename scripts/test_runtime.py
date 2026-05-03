@@ -139,6 +139,15 @@ def main() -> int:
         "remove or replace evidence that has been overturned" in ctx0["message"],
     )
     check(
+        "inc context points to inc reference",
+        "INC reference:" in ctx0["message"]
+        and "references/inc-best-practices.md" in ctx0["message"],
+    )
+    check(
+        "inc context gates substantive reference reads",
+        "For substantive INC work" in ctx0["message"],
+    )
+    check(
         "inc context prompts domain calibration",
         "bounded domain calibration pass" in ctx0["message"],
     )
@@ -309,6 +318,11 @@ def main() -> int:
     check(
         "authorized inc context defers activation timing to agent judgment",
         "activate when you judge" in ctx2["message"],
+    )
+    check(
+        "authorized inc context points to inc reference",
+        "INC reference:" in ctx2["message"]
+        and "references/inc-best-practices.md" in ctx2["message"],
     )
     check(
         "authorized inc context avoids duplicate punctuation",

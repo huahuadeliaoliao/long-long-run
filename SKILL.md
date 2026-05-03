@@ -61,6 +61,9 @@ It does not have to lead to `ACTIVE`.
 
 `INC` may inspect files, run commands, create probes, or make bounded changes when that is the right way to obtain evidence.
 
+For substantive `INC` work, read [references/inc-best-practices.md](references/inc-best-practices.md) before synthesizing expert defaults, evidence-chain gaps, or the next `INC` move unless you have already read it in this session.
+This especially applies when the user goal is unclear, the domain framing matters, acceptance criteria must be inferred, or the work may remain `INC`-only.
+
 The distinction is semantic, not mechanical.
 
 `INC` is allowed to stay live for the whole session.

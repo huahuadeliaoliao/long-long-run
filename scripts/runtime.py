@@ -18,6 +18,10 @@ from state import (
     save_state,
 )
 
+INC_REFERENCE_PATH = (
+    Path(__file__).resolve().parent.parent / "references" / "inc-best-practices.md"
+)
+
 
 def _deep_merge(base: Any, patch: Any) -> Any:
     if isinstance(base, dict) and isinstance(patch, dict):
@@ -375,6 +379,11 @@ INC_AUTHORIZED_CONTEXT_INSTRUCTIONS = [
         "If the current evidence chain no longer supports the contract, stay in INC and surface "
         "the needed confirmation."
     ),
+    (
+        "For substantive INC work, read the INC reference before synthesizing expert defaults, "
+        "evidence-chain gaps, or the next INC move unless you have already read it in this "
+        f"session. INC reference: {INC_REFERENCE_PATH}"
+    ),
 ]
 
 INC_CONTEXT_INSTRUCTIONS = [
@@ -393,6 +402,11 @@ INC_CONTEXT_INSTRUCTIONS = [
         "Keep current evidence fresh: remove or replace evidence that has been overturned. "
         "Record major evidence changes in checkpoint history with a short summary, but keep "
         "evidence_chain focused on current effective evidence."
+    ),
+    (
+        "For substantive INC work, read the INC reference before synthesizing expert defaults, "
+        "evidence-chain gaps, or the next INC move unless you have already read it in this "
+        f"session. INC reference: {INC_REFERENCE_PATH}"
     ),
     (
         "If continuing INC exploration, name the evidence gap, next bounded probe, expected "
