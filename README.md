@@ -20,6 +20,10 @@ LLR is prompt-driven. Users normally do not operate it through CLI commands. Ins
   <strong>⚠️ Hook required:</strong> LLR depends on Codex hooks. Make sure hooks are enabled in Codex before relying on LLR's runtime context or ACTIVE stop guard.
 </p>
 
+<p>
+  <strong>📓 Origin story:</strong> Read <a href="docs/why-long-long-run.md">Why I Built Long Long Run</a> for the dev-log version of the problems that shaped LLR.
+</p>
+
 ## Start With These Prompts
 
 <p align="center">
