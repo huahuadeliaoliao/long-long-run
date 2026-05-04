@@ -27,6 +27,10 @@ LLR is prompt-driven. Users normally do not operate it through CLI commands. Ins
   <span>INC exploration → ACTIVE authorization → side-thread tolerance → hook-enforced continuation</span>
 </p>
 
+<p>
+  <strong>💡 Remember:</strong> The more objective noise you remove in INC, the more predictable ACTIVE becomes. Use INC to converge on the right contract before asking Codex to execute.
+</p>
+
 LLR is used through natural-language prompts. These examples show the three common user moves.
 
 ### Enter INC
