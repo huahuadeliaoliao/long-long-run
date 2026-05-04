@@ -181,3 +181,15 @@ LLR is not a project management system, memory archive, or questionnaire. It sto
 </ul>
 
 </details>
+
+## Star History
+
+<p align="center">
+  <a href="https://www.star-history.com/#huahuadeliaoliao/long-long-run&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=huahuadeliaoliao/long-long-run&type=date&theme=dark&legend=top-left" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=huahuadeliaoliao/long-long-run&type=date&legend=top-left" />
+      <img alt="Long Long Run star history" src="https://api.star-history.com/chart?repos=huahuadeliaoliao/long-long-run&type=date&legend=top-left" />
+    </picture>
+  </a>
+</p>
