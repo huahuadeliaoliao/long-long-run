@@ -77,7 +77,33 @@ In practice, Codex handles itself surprisingly well under this setup. It is bett
 
 That lets me spend more energy where I actually want to participate: the early INC phase and the final review.
 
-## 3. Evidence Chain: Long Runs Need More Than Checkpoints 🧵
+## 3. Side Threads: The Mainline Still Needs A Compass 🧭
+
+The side-thread idea came much earlier than Codex's `/side` feature, and it is not based on the same mechanism.
+
+The reason I wanted it was simple: during an ACTIVE run, I often remember something late.
+
+Maybe I forgot to mention an important condition. Maybe a premise changed. Maybe I suddenly need Codex to help me with a more urgent question before returning to the main job.
+
+That kind of follow-up conversation is natural for humans, but it is awkward for long agent runs.
+
+From the LLM side, extra conversational turns are not free. They can dilute attention, shift the local conversational center, and even make later compaction less faithful to the original mainline. I have thought about this problem a lot, and I suspect there is more to explore here in the future.
+
+LLR cannot magically remove that underlying attention problem.
+
+What it can do is help Codex tolerate it.
+
+In ACTIVE mode, the user-message hook reminds Codex to answer the user's latest message first, then resume the authorized mainline if that message does not change the contract, block the work, or require returning to INC.
+
+That small rule matters.
+
+It means I can add a missing constraint, ask a side question, or briefly redirect Codex to something urgent without permanently knocking the long task off course.
+
+Codex can walk the side path, handle what I just asked, and then return to the road.
+
+It feels a little like an explorer getting briefly lost in the woods, except the compass in their hand still points back to the intended direction.
+
+## 4. Evidence Chain: Long Runs Need More Than Checkpoints 🧵
 
 The evidence-chain idea came from a complaint a friend made.
 
@@ -124,7 +150,7 @@ If old evidence is overturned, it should be removed or replaced in the current e
 
 This makes Codex's continuation feel more like engineering judgment and less like rolling forward through a growing pile of summaries.
 
-## 4. Explore, Do Not Just Validate Search Results 🔎
+## 5. Explore, Do Not Just Validate Search Results 🔎
 
 The last piece came from my confusion about Codex's search behavior.
 
@@ -187,7 +213,7 @@ LLR is trying to give Codex a steadier working posture:
 
 - use INC to reduce intent noise, explore, and build an evidence chain
 - use ACTIVE to continue along an authorized mainline
-- tolerate side conversations without losing the main objective
+- answer side conversations without losing the authorized mainline
 - avoid premature stopping when the task is not done and the next step is clear
 - update understanding when evidence changes instead of clinging to an old plan
 
