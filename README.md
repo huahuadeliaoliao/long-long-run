@@ -1,7 +1,11 @@
 # Long Long Run
 
 <p align="center">
-  <img src="assets/icon.svg" alt="Long Long Run icon" width="128">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/icon-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/icon.svg">
+    <img src="assets/icon.svg" alt="Long Long Run icon" width="128">
+  </picture>
 </p>
 
 <p align="center">
